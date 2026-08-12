@@ -75,7 +75,7 @@ describe('shopping service', () => {
 
   it('compares offers by knownDeliveredSubtotal by default, excluding offers without one', async () => {
     const services = createServices(testConfig(), new FakeShoppingProvider());
-    const result = await services.shopping.compareOffers({ id: 'immersive-token-1' });
+    const result = await services.shopping.compareOffers({ id: 'immersive-token-1', maxResults: 1 });
     expect(result.sortBy).toBe('knownDeliveredSubtotal');
     // Offers with only a bare price (unknown shipping) are conservatively excluded, since they
     // are not comparable to a true price+shipping subtotal.
@@ -87,7 +87,7 @@ describe('shopping service', () => {
     // Discount Depot's known delivered subtotal (21.99) is lower than Acme's (34.98).
     expect(result.offers[0]?.offer.sellerName).toBe('Discount Depot');
     expect(result.comparedOfferCount).toBe(result.offers.length);
-    expect(result.comparedOfferCount).toBe(2);
+    expect(result.comparedOfferCount).toBe(1);
     expect(result.mixedCurrencies).toBe(false);
   });
 

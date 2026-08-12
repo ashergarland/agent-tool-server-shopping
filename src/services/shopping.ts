@@ -206,7 +206,7 @@ export class ShoppingService {
     return {
       id: input.id,
       sortBy,
-      comparedOfferCount: comparable.length,
+      comparedOfferCount: ranked.length,
       mixedCurrencies: distinctCurrencies.size > 1,
       offers: ranked,
       attribution: result.attribution,
