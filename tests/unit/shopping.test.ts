@@ -75,7 +75,10 @@ describe('shopping service', () => {
 
   it('compares offers by knownDeliveredSubtotal by default, excluding offers without one', async () => {
     const services = createServices(testConfig(), new FakeShoppingProvider());
-    const result = await services.shopping.compareOffers({ id: 'immersive-token-1', maxResults: 1 });
+    const result = await services.shopping.compareOffers({
+      id: 'immersive-token-1',
+      maxResults: 1,
+    });
     expect(result.sortBy).toBe('knownDeliveredSubtotal');
     // Offers with only a bare price (unknown shipping) are conservatively excluded, since they
     // are not comparable to a true price+shipping subtotal.
