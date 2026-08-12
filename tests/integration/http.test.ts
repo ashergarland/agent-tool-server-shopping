@@ -1,9 +1,9 @@
 import pino from 'pino';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createHttpServer } from '../../src/server/http.js';
-import { MemoryProvider } from '../../src/provider/memory.js';
 import { createServices } from '../../src/services/index.js';
 import { createToolRegistry } from '../../src/tools/registry.js';
+import { FakeShoppingProvider } from '../helpers/fake-provider.js';
 import { testConfig } from '../helpers/config.js';
 
 const servers: ReturnType<typeof createHttpServer>[] = [];
@@ -14,7 +14,7 @@ const server = (overrides: Record<string, unknown> = {}) => {
   const app = createHttpServer({
     config,
     logger: pino({ level: 'silent' }),
-    services: createServices(config, new MemoryProvider()),
+    services: createServices(config, new FakeShoppingProvider()),
     registry: createToolRegistry(),
   });
   servers.push(app);
@@ -52,7 +52,7 @@ describe('HTTP API', () => {
       headers: { 'x-api-key': apiKey },
     });
     expect(response.statusCode).toBe(200);
-    expect(response.json().tools).toHaveLength(3);
+    expect(response.json().tools).toHaveLength(5);
   });
 
   it('rate limits repeated unauthenticated attempts by client IP', async () => {
@@ -98,16 +98,16 @@ describe('HTTP API', () => {
     const app = server();
     const success = await app.inject({
       method: 'POST',
-      url: '/tools/example_get_item',
+      url: '/tools/shopping_get_product_details',
       headers: { 'x-api-key': apiKey },
-      payload: { id: 'example-1' },
+      payload: { id: 'immersive-token-1' },
     });
     expect(success.statusCode).toBe(200);
-    expect(success.json().result.item.id).toBe('example-1');
+    expect(success.json().result.product.id).toBe('immersive-token-1');
 
     const invalid = await app.inject({
       method: 'POST',
-      url: '/tools/example_get_item',
+      url: '/tools/shopping_get_product_details',
       headers: { 'x-api-key': apiKey },
       payload: {},
     });
@@ -115,15 +115,19 @@ describe('HTTP API', () => {
     expect(invalid.json().error.details.issues).toHaveLength(1);
   });
 
-  it('previews guarded mutations and rate limits principals', async () => {
-    const preview = await server().inject({
+  it('searches products and returns attribution', async () => {
+    const app = server();
+    const response = await app.inject({
       method: 'POST',
-      url: '/tools/example_update_item',
+      url: '/tools/shopping_search_products',
       headers: { 'x-api-key': apiKey },
-      payload: { id: 'example-1', status: 'complete', dryRun: true },
+      payload: { query: 'widget' },
     });
-    expect(preview.json().result).toMatchObject({ performed: false, dryRun: true });
+    expect(response.statusCode).toBe(200);
+    expect(response.json().result.attribution.provider).toBe('SerpApi (Google Shopping)');
+  });
 
+  it('rate limits principals', async () => {
     const limited = server({ RATE_LIMIT_MAX: 1 });
     expect(
       (
@@ -148,6 +152,6 @@ describe('HTTP API', () => {
   it('publishes the generated OpenAPI document', async () => {
     const response = await server().inject({ method: 'GET', url: '/openapi.json' });
     expect(response.statusCode).toBe(200);
-    expect(response.json().paths['/tools/example_list_items']).toBeDefined();
+    expect(response.json().paths['/tools/shopping_search_products']).toBeDefined();
   });
 });

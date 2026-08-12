@@ -7,6 +7,7 @@ export const testConfig = (overrides: Record<string, unknown> = {}): AppConfig =
       AUTH_MODE: 'api-key',
       API_KEYS: 'test-api-key-that-is-at-least-32-characters',
       RATE_LIMIT_MAX: 120,
+      SERPAPI_API_KEY: 'test-serpapi-key',
       ...overrides,
     }),
   );

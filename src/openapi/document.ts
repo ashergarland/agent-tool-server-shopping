@@ -121,9 +121,10 @@ export const buildOpenApiDocument = (config: AppConfig, registry: ToolRegistry):
   return {
     openapi: '3.1.0',
     info: {
-      title: 'Agent Tool Server Template',
+      title: 'Agent Tool Server: Google Shopping (SerpApi)',
       version: config.service.version,
-      description: 'Replaceable tool server infrastructure generated from one typed tool registry.',
+      description:
+        'Read-only Google Shopping tools (search, product details, offers, comparisons, similar products) backed by SerpApi, generated from one typed tool registry.',
     },
     servers: [{ url: config.service.publicBaseUrl ?? `http://localhost:${config.http.port}` }],
     security: config.auth.mode === 'disabled' ? [] : [{ bearerAuth: [] }],

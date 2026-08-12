@@ -5,6 +5,7 @@ param containerImage string
 param registryServer string
 param identityId string
 param apiKeySecretUri string
+param serpApiKeySecretUri string
 param logAnalyticsCustomerId string
 @secure()
 param logAnalyticsSharedKey string
@@ -62,6 +63,11 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
           keyVaultUrl: apiKeySecretUri
           identity: identityId
         }
+        {
+          name: 'serpapi-api-key'
+          keyVaultUrl: serpApiKeySecretUri
+          identity: identityId
+        }
       ]
     }
     template: {
@@ -85,6 +91,10 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'API_KEYS'
               secretRef: 'api-key'
+            }
+            {
+              name: 'SERPAPI_API_KEY'
+              secretRef: 'serpapi-api-key'
             }
             {
               name: 'MUTATIONS_ENABLED'
