@@ -12,6 +12,12 @@ RUN npm run build \
 FROM node:22-alpine AS runtime
 ARG GIT_SHA=unknown
 ARG SERVICE_VERSION=0.0.0-dev
+LABEL org.opencontainers.image.title="agent-tool-server-shopping" \
+      org.opencontainers.image.description="Read-only MCP/HTTP agent tool server for Google Shopping (SerpApi)." \
+      org.opencontainers.image.source="https://github.com/ashergarland/agent-tool-server-shopping" \
+      org.opencontainers.image.licenses="MIT" \
+      org.opencontainers.image.version=${SERVICE_VERSION} \
+      org.opencontainers.image.revision=${GIT_SHA}
 ENV NODE_ENV=production \
     PORT=8080 \
     HOST=0.0.0.0 \

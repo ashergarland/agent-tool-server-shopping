@@ -9,7 +9,7 @@ param environmentName string
 param location string = deployment().location
 
 @description('Immutable container image reference used on the second pass.')
-param containerImage string = 'replace.invalid/agent-tool-server:replace-me'
+param containerImage string = 'replace.invalid/agent-tool-server-shopping:replace-me'
 
 @description('False for the prerequisite pass; true only after the Key Vault secret and image exist.')
 param deployApp bool = false
@@ -19,6 +19,9 @@ param mutationsEnabled bool = false
 
 @description('Existing Key Vault secret name used by the application.')
 param apiKeySecretName string = 'tool-server-api-key'
+
+@description('Existing Key Vault secret name holding the SerpApi key, kept separate from the tool-server API key.')
+param serpApiKeySecretName string = 'serpapi-api-key'
 
 @description('Object ID allowed to seed the Key Vault secret during bootstrap; leave blank outside bootstrap.')
 param bootstrapPrincipalObjectId string = ''
@@ -99,6 +102,7 @@ module app 'modules/container-app.bicep' = if (deployApp) {
     registryServer: registry.outputs.loginServer
     identityId: identity.outputs.id
     apiKeySecretUri: '${keyVault.outputs.vaultUri}secrets/${apiKeySecretName}'
+    serpApiKeySecretUri: '${keyVault.outputs.vaultUri}secrets/${serpApiKeySecretName}'
     logAnalyticsCustomerId: observability.outputs.workspaceCustomerId
     logAnalyticsSharedKey: observability.outputs.workspaceSharedKey
     applicationInsightsConnectionString: observability.outputs.applicationInsightsConnectionString

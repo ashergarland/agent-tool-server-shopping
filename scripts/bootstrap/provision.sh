@@ -6,6 +6,7 @@ LOCATION="${2:-eastus}"
 DEPLOYMENT_NAME="ats-${ENVIRONMENT_NAME}"
 IMAGE_TAG="${IMAGE_TAG:-$(git rev-parse --short=12 HEAD)}"
 SECRET_NAME="tool-server-api-key"
+SERPAPI_SECRET_NAME="serpapi-api-key"
 BOOTSTRAP_PRINCIPAL_OBJECT_ID="$(az ad signed-in-user show --query id -o tsv)"
 
 az bicep build --file infra/main.bicep >/dev/null
@@ -31,6 +32,11 @@ if [[ -z "${API_KEY:-}" ]]; then
   printf 'Generated an API key. Retrieve it from Key Vault; it will not be printed.\n'
 fi
 
+if [[ -z "${SERPAPI_API_KEY:-}" ]]; then
+  printf 'SERPAPI_API_KEY must be set to a real SerpApi key before bootstrapping.\n' >&2
+  exit 1
+fi
+
 for attempt in {1..12}; do
   if az keyvault secret set \
     --vault-name "$KEY_VAULT_NAME" \
@@ -47,9 +53,16 @@ for attempt in {1..12}; do
 done
 unset API_KEY
 
+az keyvault secret set \
+  --vault-name "$KEY_VAULT_NAME" \
+  --name "$SERPAPI_SECRET_NAME" \
+  --value "$SERPAPI_API_KEY" \
+  --only-show-errors >/dev/null
+unset SERPAPI_API_KEY
+
 az acr build \
   --registry "$REGISTRY_NAME" \
-  --image "agent-tool-server:${IMAGE_TAG}" \
+  --image "agent-tool-server-shopping:${IMAGE_TAG}" \
   --build-arg "GIT_SHA=${IMAGE_TAG}" \
   --build-arg "SERVICE_VERSION=${SERVICE_VERSION:-0.1.0}" \
   . \
@@ -64,5 +77,5 @@ az deployment sub create \
     location="$LOCATION" \
     deployApp=true \
     bootstrapPrincipalObjectId="$BOOTSTRAP_PRINCIPAL_OBJECT_ID" \
-    containerImage="${REGISTRY_SERVER}/agent-tool-server:${IMAGE_TAG}" \
+    containerImage="${REGISTRY_SERVER}/agent-tool-server-shopping:${IMAGE_TAG}" \
   --only-show-errors

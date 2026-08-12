@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { AppError } from '../../src/errors.js';
-import { MemoryProvider } from '../../src/provider/memory.js';
 import { createServices } from '../../src/services/index.js';
 import { defineTool } from '../../src/tools/definitions.js';
 import { createToolRegistry, ToolRegistry } from '../../src/tools/registry.js';
+import { FakeShoppingProvider } from '../helpers/fake-provider.js';
 import { testConfig } from '../helpers/config.js';
 
 const context = { requestId: 'test', principal: 'tester' };
@@ -13,17 +13,20 @@ describe('tool registry', () => {
   it('exposes unique definitions and schemas', () => {
     const registry = createToolRegistry();
     expect(registry.list().map((tool) => tool.name)).toEqual([
-      'example_list_items',
-      'example_get_item',
-      'example_update_item',
+      'shopping_search_products',
+      'shopping_get_product_details',
+      'shopping_get_product_offers',
+      'shopping_compare_offers',
+      'shopping_find_similar_products',
     ]);
     expect(registry.list().every((tool) => tool.inputJsonSchema['type'] === 'object')).toBe(true);
+    expect(registry.list().every((tool) => tool.kind === 'read')).toBe(true);
   });
 
   it('validates input and output', async () => {
-    const services = createServices(testConfig(), new MemoryProvider());
+    const services = createServices(testConfig(), new FakeShoppingProvider());
     await expect(
-      createToolRegistry().invoke('example_get_item', {}, services, context),
+      createToolRegistry().invoke('shopping_get_product_details', {}, services, context),
     ).rejects.toMatchObject({
       code: 'bad_request',
     });
